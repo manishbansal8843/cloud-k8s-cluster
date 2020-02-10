@@ -20,7 +20,7 @@ do
 
 done
 
-if [ $NUM_OF_NODES -lt 1] ; then
+if [ $NUM_OF_NODES -lt 1]; then
 echo "NUM_OF_NODES cannot be less than 1"
 exit 1
 fi
@@ -36,10 +36,11 @@ then
 else
   for i in "${SUPPORTED_CLOUD_PROVIDERS[@]}"
   do
-    if [ "$i" -eq "$CLOUD_PROVIDER" ] ; then
+    if [ "$i" -eq "$CLOUD_PROVIDER" ]; then
           echo "Going to install k8s cluster on $CLOUD_PROVIDER"
           . $CLOUD_PROVIDER/entrypoint.sh
           exit 0
+	  fi
   done
   echo "$CLOUD_PROVIDER cloud provider is not supported as of now. Kindly check documentation for supported cloud providers."
   exit 1

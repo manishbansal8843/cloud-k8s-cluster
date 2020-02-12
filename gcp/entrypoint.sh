@@ -15,7 +15,7 @@ gcloud compute instances create master-node \
     --image ubuntu-1604-xenial-v20200129 \
     --image-project ubuntu-os-cloud \
 	--create-disk size=50,type=pd-standard \
-	--machine-type n2-standard-2 \
+	--machine-type n1-standard-2 \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-master.sh
 
 if [ $NUM_OF_NODES -gt 1 ]; then
@@ -26,7 +26,7 @@ gcloud compute instances create worker-node-$WORKER_NODE \
     --image ubuntu-1604-xenial-v20200129 \
     --image-project ubuntu-os-cloud \
 	--create-disk size=50,type=pd-standard \
-	--machine-type n2-standard-2 \
+	--machine-type n1-standard-2 \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-worker.sh
 WORKER_NODE=$(($WORKER_NODE+1))
 done

@@ -27,7 +27,19 @@ echo "###########Installing k8s packages. Going to sleep for 60 sec.############
 sleep 60
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 echo "#####Kubernetes master node is initialized successfully######"
-echo "Going to setup kubectl on master node. Current directory is $(pwd). Home directory is $HOME"
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+echo "###Current users. checking if home user exists or not###"
+CURRENT_USER=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/username?alt=text" -H "Metadata-Flavor: Google")
+CURRENT_USER_HOME_DIR=$(grep $CURRENT_USER /etc/passwd | cut -d ":" -f6)
+echo "Going to setup kubectl on master node for user $CURRENT_USER inside directory $CURRENT_USER_HOME_DIR"
+mkdir -p $CURRENT_USER_HOME_DIR/.kube
+sudo cp -i /etc/kubernetes/admin.conf $CURRENT_USER_HOME_DIR/.kube/config
+sudo chown $(id -u $CURRENT_USER):$(id -g $CURRENT_USER) $CURRENT_USER_HOME_DIR/.kube/config
+echo "###Setting kubectl for root user###"
+mkdir -p ~/.kube
+sudo cp -i /etc/kubernetes/admin.conf ~/.kube/config
+cd ~
+kubectl version
+echo "Setting up flannel"
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+echo "K8s master node installation completed successfully!"
+kubectl get pods -n kube-system

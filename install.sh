@@ -20,7 +20,7 @@ do
 
 done
 
-if [ $NUM_OF_NODES -lt 1]; then
+if [ $NUM_OF_NODES -lt 1 ]; then
 echo "NUM_OF_NODES cannot be less than 1"
 exit 1
 fi

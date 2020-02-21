@@ -7,6 +7,7 @@ echo "Issue occured during project creation. This is unexpected. Exiting abnorma
 exit 1
 fi
 gcloud config set project $MY_PROJECT_ID
+gcloud config set compute/zone us-east1-b
 export CLOUDSDK_COMPUTE_ZONE=us-east1-b
 BILLING_ACCOUNT_ID=$(gcloud alpha billing accounts list | tail -1 | cut -d' ' -f 1)
 gcloud alpha billing accounts projects link $MY_PROJECT_ID --account-id=$BILLING_ACCOUNT_ID
@@ -18,7 +19,14 @@ gcloud compute instances create master-node \
 	--machine-type n1-standard-2 \
     --metadata username=$(whoami) \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-master.sh
-
+ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa_cloud_k8s_cluster 2>/dev/null <<< y >/dev/null
+# SSH setup should have been done already on the cloud shell before executing scp
+while [ ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~ ]
+do
+echo "Could not copy kube config files. Sleeping for 30 seconds."
+sleep 30
+done
+gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="ps"
 if [ $NUM_OF_NODES -gt 1 ]; then
 WORKER_NODE=0
 while [ $WORKER_NODE -lt $(($NUM_OF_NODES-1)) ]

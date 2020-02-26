@@ -1,11 +1,27 @@
-gcloud components update
+#gcloud components update
 gcloud components install alpha
-MY_PROJECT_ID=k8s-cluster-${NUM_OF_NODES}-nodes-$RANDOM
-gcloud projects create $MY_PROJECT_ID
-if [ $? -eq 1 ]; then
-echo "Issue occured during project creation. This is unexpected. Exiting abnormally!!"
-exit 1
+if [ -z $GCP_PROJECT_NAME ]
+then
+  echo "GCP_PROJECT_NAME is not passed as an argument. Hence, will create a new project subject to the project quota availability of the user."
+  MY_PROJECT_ID=k8s-cluster-${NUM_OF_NODES}-nodes-$RANDOM
+  gcloud projects create $MY_PROJECT_ID
+  if [ $? -eq 1 ]; then
+    echo "Issue occured during project creation. This is unexpected. Exiting abnormally!!"
+    exit 1
+  fi
+else
+  echo "GCP_PROJECT_NAME value $GCP_PROJECT_NAME will be used to create new k8s VM instances."
+  MY_PROJECT_ID=${GCP_PROJECT_NAME}
+  echo "Checking if project $GCP_PROJECT_NAME exists or not"
+  gcloud projects list --filter="PROJECT_ID=$GCP_PROJECT_NAME" | grep $GCP_PROJECT_NAME
+  if [ $? -eq 1 ]; then
+    echo "$GCP_PROJECT_NAME project does not exist. This is unexpected. Exiting abnormally!!"
+    exit 1
+  fi
+  echo "$GCP_PROJECT_NAME exists. Will be using it to create k8s VMs."
 fi
+
+
 gcloud config set project $MY_PROJECT_ID
 gcloud config set compute/zone us-east1-b
 export CLOUDSDK_COMPUTE_ZONE=us-east1-b
@@ -21,7 +37,7 @@ gcloud compute instances create master-node \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-master.sh
 ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa_cloud_k8s_cluster 2>/dev/null <<< y >/dev/null
 # SSH setup should have been done already on the cloud shell before executing scp
-while [ ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~ ]
+while ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~
 do
 echo "Could not copy kube config files. Sleeping for 30 seconds."
 sleep 30

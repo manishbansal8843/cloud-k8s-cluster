@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 echo "=====================================Welcome to cloud k8s cluster installer====================================="
-echo "Usage: ./install.sh NUM_OF_NODES=3 CLOUD_PROVIDER=gcp"
+echo "Usage: ./install.sh NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value"
 SUPPORTED_CLOUD_PROVIDERS=("gcp")
 NUM_OF_NODES=3
 DEFAULT_CLOUD_PROVIDER="gcp"
@@ -13,7 +13,8 @@ do
 
     case "$KEY" in
             NUM_OF_NODES) NUM_OF_NODES=${VALUE} ;;
-            CLOUD_PROVIDER) CLOUD_PROVIDER=${VALUE} ;;     
+            CLOUD_PROVIDER) CLOUD_PROVIDER=${VALUE} ;; 
+            GCP_PROJECT_NAME) GCP_PROJECT_NAME=${VALUE} ;;    
             *)   
     esac    
 

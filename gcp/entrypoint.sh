@@ -37,12 +37,18 @@ gcloud compute instances create master-node \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-master.sh
 ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa_cloud_k8s_cluster 2>/dev/null <<< y >/dev/null
 # SSH setup should have been done already on the cloud shell before executing scp
-while ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~
+while ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~ 2>/dev/null
 do
-echo "Could not copy kube config files. Sleeping for 30 seconds."
+echo "Master node installation is in progress. Sleeping for 30 seconds..."
 sleep 30
 done
-gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="ps"
+gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubectl get nodes"
+CLUSTER_TOKEN=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubeadm token create")
+echo "Cluster token is $CLUSTER_TOKEN"
+gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubeadm token list"
+CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
+  openssl dgst -sha256 -hex | sed 's/^.* //'")
+echo "Cluster ca cert hash is $CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH"
 if [ $NUM_OF_NODES -gt 1 ]; then
 WORKER_NODE=0
 while [ $WORKER_NODE -lt $(($NUM_OF_NODES-1)) ]
@@ -53,6 +59,8 @@ gcloud compute instances create worker-node-$WORKER_NODE \
 	--create-disk size=50,type=pd-standard \
 	--machine-type n1-standard-2 \
     --metadata username=$(whoami) \
+    --metadata k8s-token=$CLUSTER_TOKEN \
+    --metadata k8s-hash=$CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH \    
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-worker.sh
 WORKER_NODE=$(($WORKER_NODE+1))
 done

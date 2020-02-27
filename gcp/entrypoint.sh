@@ -29,7 +29,7 @@ BILLING_ACCOUNT_ID=$(gcloud alpha billing accounts list | tail -1 | cut -d' ' -f
 gcloud alpha billing accounts projects link $MY_PROJECT_ID --account-id=$BILLING_ACCOUNT_ID
 gcloud services enable compute.googleapis.com
 gcloud compute instances create master-node \
-    --image ubuntu-1604-xenial-v20200129 \
+    --image ubuntu-1604-xenial-v20200223 \
     --image-project ubuntu-os-cloud \
 	--create-disk size=50,type=pd-standard \
 	--machine-type n1-standard-2 \
@@ -49,19 +49,33 @@ gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --
 CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | \
   openssl dgst -sha256 -hex | sed 's/^.* //'")
 echo "Cluster ca cert hash is $CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH"
+K8S_MASTER_INTERNAL_IP=$(gcloud compute instances describe master-node \
+  --format='get(networkInterfaces[0].networkIP)')
+echo "K8s master node internal ip is $K8S_MASTER_INTERNAL_IP"
 if [ $NUM_OF_NODES -gt 1 ]; then
 WORKER_NODE=0
 while [ $WORKER_NODE -lt $(($NUM_OF_NODES-1)) ]
 do
 gcloud compute instances create worker-node-$WORKER_NODE \
-    --image ubuntu-1604-xenial-v20200129 \
+    --image ubuntu-1604-xenial-v20200223 \
     --image-project ubuntu-os-cloud \
 	--create-disk size=50,type=pd-standard \
 	--machine-type n1-standard-2 \
-    --metadata username=$(whoami) \
-    --metadata k8s-token=$CLUSTER_TOKEN \
-    --metadata k8s-hash=$CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH \    
-	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-worker.sh
+    --metadata username=$(whoami),k8s-token=$CLUSTER_TOKEN,k8s-hash=$CLUSTER_DISCOVERY_TOKEN_CA_CERT_HASH,k8s-master-node-ip=$K8S_MASTER_INTERNAL_IP \
+    --metadata-from-file startup-script=gcp/install-scripts/gcp-install-worker.sh
 WORKER_NODE=$(($WORKER_NODE+1))
 done
 fi
+echo "###All worker nodes installed successfully###"
+echo "###Polling to check if all nodes are ready###"
+NUM_OF_READY_NODES=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command=$'JSONPATH=\'{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}\'  && kubectl get nodes -o jsonpath="$JSONPATH" | grep -o "Ready=True" | wc -l')
+while [ $NUM_OF_READY_NODES -lt $NUM_OF_NODES ]
+do
+echo "Number of ready nodes are: $NUM_OF_READY_NODES which is less than total number of nodes : $NUM_OF_NODES"
+echo "Sleeping for 30 secs..."
+sleep 30
+NUM_OF_READY_NODES=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command=$'JSONPATH=\'{range .items[*]}{@.metadata.name}:{range @.status.conditions[*]}{@.type}={@.status};{end}{end}\'  && kubectl get nodes -o jsonpath="$JSONPATH" | grep -o "Ready=True" | wc -l')
+done
+echo "Number of ready nodes are: $NUM_OF_READY_NODES which is equal to total number of nodes : $NUM_OF_NODES"
+echo "All nodes are up!"
+gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubectl get nodes"

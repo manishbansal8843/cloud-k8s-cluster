@@ -37,11 +37,12 @@ gcloud compute instances create master-node \
 	--metadata-from-file startup-script=gcp/install-scripts/gcp-install-master.sh
 ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa_cloud_k8s_cluster 2>/dev/null <<< y >/dev/null
 # SSH setup should have been done already on the cloud shell before executing scp
-while ! gcloud compute scp --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --recurse master-node:~/.kube ~ 2>/dev/null
+while ! gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="[ -d ~/.kube ]"
 do
 echo "Master node installation is in progress. Sleeping for 30 seconds..."
 sleep 30
 done
+
 gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubectl get nodes"
 CLUSTER_TOKEN=$(gcloud compute ssh master-node --ssh-key-file=~/.ssh/id_rsa_cloud_k8s_cluster --command="kubeadm token create")
 echo "Cluster token is $CLUSTER_TOKEN"

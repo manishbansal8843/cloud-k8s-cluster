@@ -1,4 +1,7 @@
 echo "This is master node"
+
+# Installing docker as per documentation given here
+# https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-using-the-repository
 sudo apt-get update
 sudo apt-get install -y \
     apt-transport-https \
@@ -14,6 +17,10 @@ sudo add-apt-repository \
    stable"
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+
+# Installing kubernetes master node as per documentatiion.
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/
 sudo apt-get install -y iptables arptables ebtables
 sudo apt-get update && sudo apt-get install -y apt-transport-https curl
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -27,6 +34,8 @@ echo "###########Installing k8s packages. Going to sleep for 60 sec.############
 sleep 60
 sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 echo "#####Kubernetes master node is initialized successfully######"
+
+# Copying kube config file to hte user home directory
 echo "###Current users. checking if home user exists or not###"
 CURRENT_USER=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/username?alt=text" -H "Metadata-Flavor: Google")
 CURRENT_USER_HOME_DIR=$(grep $CURRENT_USER /etc/passwd | cut -d ":" -f6)

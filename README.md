@@ -3,6 +3,10 @@ This repository contains automation scripts to spin up k8s cluster on bare metal
 
 The aim of this project is to create scripts for all major cloud providers. However, as a starter, Only GCP is supported.
 
+To read more about this project, one can check below article as well.
+
+https://medium.com/@manishbansal8843/automated-multi-node-kubernetes-installation-on-bare-metal-cloud-vms-3948325e2868
+
 # How to install a 3 node cluster on GCP
 
 1. First go to GCP console and open a cloud shell.

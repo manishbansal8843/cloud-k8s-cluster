@@ -1,48 +1,19 @@
-#!/bin/bash
-set -e
+#!/bin/bash -e
+
 echo "=====================================Welcome to cloud k8s cluster installer====================================="
-echo "Usage: ./install.sh NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value"
-SUPPORTED_CLOUD_PROVIDERS=("gcp")
-NUM_OF_NODES=3
-DEFAULT_CLOUD_PROVIDER="gcp"
-for ARGUMENT in "$@"
-do
+echo "Usage: NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value ./install.sh"
 
-    KEY=$(echo $ARGUMENT | cut -f1 -d=)
-    VALUE=$(echo $ARGUMENT | cut -f2 -d=)   
-
-    case "$KEY" in
-            NUM_OF_NODES) NUM_OF_NODES=${VALUE} ;;
-            CLOUD_PROVIDER) CLOUD_PROVIDER=${VALUE} ;; 
-            GCP_PROJECT_NAME) GCP_PROJECT_NAME=${VALUE} ;;    
-            *)   
-    esac    
-
-
-done
-
-if [ $NUM_OF_NODES -lt 1 ]; then
-echo "NUM_OF_NODES cannot be less than 1"
-exit 1
-fi
-
+: ${NUM_OF_NODES:=3}
+: ${CLOUD_PROVIDER:="gcp"}
 WORKER_NODES=$(($NUM_OF_NODES - 1))
 
-if [ -z $CLOUD_PROVIDER ]
-then
-  CLOUD_PROVIDER=$DEFAULT_CLOUD_PROVIDER
-  echo "Cloud provider name is missing. Will deploy it on GCP by default."
-  . $CLOUD_PROVIDER/entrypoint.sh
-  exit 0
-else
-  for i in "${SUPPORTED_CLOUD_PROVIDERS[@]}"
-  do
-    if [ "$i" -eq "$CLOUD_PROVIDER" ]; then
-          echo "Going to install k8s cluster on $CLOUD_PROVIDER"
-          . $CLOUD_PROVIDER/entrypoint.sh
-          exit 0
-	  fi
-  done
-  echo "$CLOUD_PROVIDER cloud provider is not supported as of now. Kindly check documentation for supported cloud providers."
-  exit 1
+if [[ $NUM_OF_NODES -lt 1 ]]; then
+	echo "NUM_OF_NODES cannot be less than 1"
+	exit 1
+elif ! [[ -f $CLOUD_PROVIDER/entrypoint.sh ]]; then
+	echo "$CLOUD_PROVIDER cloud provider is not supported as of now. Kindly check documentation for supported cloud providers."
+	exit 2
 fi
+
+echo "Going to install k8s cluster on $CLOUD_PROVIDER"
+. $CLOUD_PROVIDER/entrypoint.sh

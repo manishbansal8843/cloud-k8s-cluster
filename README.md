@@ -14,15 +14,14 @@ https://medium.com/@manishbansal8843/automated-multi-node-kubernetes-installatio
 3. Clone this git repository in home directory.
 `cd ~ && git clone https://github.com/manishbansal8843/cloud-k8s-cluster.git && cd cloud-k8s-cluster`
 4. Execute install.sh script with following parameters.
-`./install.sh NUM_OF_NODES=3 GCP_PROJECT_NAME=kubeadm-init`
+`NUM_OF_NODES=3 GCP_PROJECT_NAME=kubeadm-init ./install.sh`
 5. Thats it. This will install a 3 node cluster on GCP with kubectl configured on master node.
 
 Below are the logs of the script for reference.
 ```
-manishbansal8843@cloudshell:~/cloud-k8s-cluster (kubeadm-init)$ ./install.sh NUM_OF_NODES=2 GCP_PROJECT_NAME=kubeadm-init
+manishbansal8843@cloudshell:~/cloud-k8s-cluster (kubeadm-init)$ NUM_OF_NODES=2 GCP_PROJECT_NAME=kubeadm-init ./install.sh
 =====================================Welcome to cloud k8s cluster installer=====================================
-Usage: ./install.sh NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value
-Cloud provider name is missing. Will deploy it on GCP by default.
+Usage: NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value ./install.sh
 GCP_PROJECT_NAME value kubeadm-init will be used to create new k8s VM instances.
 Checking if project kubeadm-init exists or not
 kubeadm-init  kubeadm-init  859215342347

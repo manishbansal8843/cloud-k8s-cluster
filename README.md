@@ -22,7 +22,6 @@ Below are the logs of the script for reference.
 manishbansal8843@cloudshell:~/cloud-k8s-cluster (kubeadm-init)$ NUM_OF_NODES=2 GCP_PROJECT_NAME=kubeadm-init ./install.sh
 =====================================Welcome to cloud k8s cluster installer=====================================
 Usage: NUM_OF_NODES=3 CLOUD_PROVIDER=gcp GCP_PROJECT_NAME=project-name-value ./install.sh
-Cloud provider name is missing. Will deploy it on GCP by default.
 GCP_PROJECT_NAME value kubeadm-init will be used to create new k8s VM instances.
 Checking if project kubeadm-init exists or not
 kubeadm-init  kubeadm-init  859215342347

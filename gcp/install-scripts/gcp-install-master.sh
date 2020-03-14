@@ -32,7 +32,9 @@ sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 echo "###########Installing k8s packages. Going to sleep for 60 sec.#############"
 sleep 60
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+MASTER_NODE_EXT_IP=$(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+echo "External ip assigned to master node is $MASTER_NODE_EXT_IP"
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-cert-extra-sans=$MASTER_NODE_EXT_IP
 echo "#####Kubernetes master node is initialized successfully######"
 
 # Copying kube config file to hte user home directory
